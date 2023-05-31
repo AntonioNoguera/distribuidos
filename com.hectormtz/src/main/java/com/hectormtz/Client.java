@@ -77,9 +77,28 @@ public class Client extends Thread {
         // CPU
         CentralProcessor processor = hal.getProcessor();
         
+        //Max
+        long [] frequency = processor.getCurrentFreq();
+        
+        double maxFreq = processor.getMaxFreq();
+        double maxFrequency = maxFreq/(double)1000000000;
+        
+        double promFreq=0;
+        
+        
+        int core_count = processor.getLogicalProcessorCount();
+        
+        for(int i=0; i<frequency.length;i++){
+        	promFreq += frequency[i]/core_count;
+        }
+        
+        
+        double f_ghz = promFreq/1000000000;
+        System.out.println("Frecuencia promedio: "+f_ghz);
+        
 		String info[] = { 
-			String.valueOf(6),
-			String.valueOf(6),
+			String.valueOf(f_ghz),
+			String.valueOf(maxFrequency),
 			String.valueOf(availableMemory),
 		};
 	
