@@ -4,35 +4,93 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.io.File;
+import java.util.Scanner;
+import java.io.FileWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class CSVRead {
-	public static int datos = 0;
+	
+	public static ArrayList<String> res= new ArrayList<String>();
+	
+	public static File archivo = new File("NetIPs.txt"); 
 	
 	public  int getLength() {
-		return datos;
+		return res.size();
 	}
 
-	public  String[] read() {
-	        String csvFilePath = "pcs.csv";
+	public ArrayList<String> read() { 
+        
+        try {
+			Scanner lector = new Scanner(archivo);
+			res.clear();
+			
+			while(lector.hasNextLine()) {
+				String linea = lector.nextLine();
+				String[] lineaEncontrada = linea.split("_"); 
+				res.add(lineaEncontrada[0]);
+			}
+			
+			lector.close();
+		}catch(FileNotFoundException e) {
+			System.out.println("Error a la hora de encontrar el archivo");
+			e.printStackTrace();
+		} 
+        
+		return res;
+    }
+	
+	public ArrayList<String[]> getValues(){
+		ArrayList<String[]> objects = new ArrayList<String[]>();
+		
+		try {
+			Scanner lector = new Scanner(archivo); 
+			
+			while(lector.hasNextLine()) {
+				String linea = lector.nextLine();
+				String[] lineaEncontrada = linea.split("_"); 
+				objects.add(lineaEncontrada); 
+			}
+			 
+			lector.close();
+		}catch(FileNotFoundException e) {
+			System.out.println("Error a la hora de encontrar el archivo");
+			e.printStackTrace();
+		} 
+		
+		return objects;
+	}
 
-	        try (CSVReader reader = new CSVReader(new FileReader(csvFilePath))) {
-	            List<String[]> dataRows = reader.readAll();
-	            String[] res = new String[5];
+	public void newNetMember(String newMember) { 
+		 
+		try {
+            // Lee el contenido del archivo existente
+            StringBuilder contenido = new StringBuilder(); 
+            
+            
+            Scanner lector = new Scanner(archivo);  
+			while(lector.hasNextLine()) {
+				String linea = lector.nextLine();
+                contenido.append(linea);
+                contenido.append(System.lineSeparator());
+            }
+            lector.close();
 
-	            for (String[] row : dataRows) {
-	                // Process each row of data
-	                for (String cell : row) {
-	                	res[datos] = cell;
-	                	datos++;
-	                }
-	            }
-	            return res;
-	        } catch (IOException | CsvException e) {
-	            e.printStackTrace();
-	        }
-			return null;
-	    }	
-
+            // Agrega la nueva línea al contenido
+            contenido.append(newMember); 
+             
+            // Escribe el contenido actualizado en el archivo
+            BufferedWriter escritor = new BufferedWriter(new FileWriter(archivo));
+            escritor.write(contenido.toString());
+            escritor.close();
+             
+        } catch (IOException e) {
+            System.out.println("Ocurrió un error al insertar la nueva línea en el archivo: " + e.getMessage());
+        }
+	}
 }
