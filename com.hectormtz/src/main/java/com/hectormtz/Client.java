@@ -152,10 +152,8 @@ public class Client extends Thread {
 			String ret = (String)ois.readObject();
 			
 			if(ret.length()!=0) {
-				if(ret.charAt(0)=='/') {
-					CSVRead csv = new CSVRead(); 
-					csv.newNetMember(ret);
-				}
+				CSVRead csv = new CSVRead(); 
+				csv.updateNetFile(ret);
 			}
 			
 			System.out.println("Mensaje Recibido: "+ ret);
