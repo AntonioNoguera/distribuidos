@@ -158,7 +158,6 @@ public class Server extends JFrame {
     }
     */
     
-    
     private static int rankGenerator(String[] propiedades) { 
     	int Gen=0;
     	if(propiedades[0].equals("AuthenticAMD")) {
@@ -223,7 +222,8 @@ public class Server extends JFrame {
     	int flagIp= -1;
 
     	//For que vereficará si existe la ip
-    	for(int i=0;i<datos.length;i++) {
+    	for(int i=0;i<datos.length;i++) { 
+    		
     		if(ip.toString().equals((String) datos[i][1])) {
     			// Cliente actualizando datos
     			flagIp = i;
@@ -241,7 +241,6 @@ public class Server extends JFrame {
 			*/
 			
 			//newMember = ip.toString()+"_"+Buffer;
-			DevicesQueue.add(ip.toString()+"_"+Buffer);
 			
 			Object[][] nuevoArreglo;
 			if(nCliente==1) {
@@ -262,10 +261,10 @@ public class Server extends JFrame {
         	nuevoArreglo[nCliente - 1] = nuevoObjeto;
         	datos = nuevoArreglo;
         	
+        	msgBuilder();
         	activeDevices();
     	}else {
-    		// Existe el cliente
-    		//
+    		// Existe el cliente 
     		//Actualizar los elementos RanK-0 Frec Prom-6  FrecMax-7 - RamDIs Ram-8 - Ciente10 
     		
     		datos[flagIp][0] = rankGenerator(propiedades);
@@ -289,15 +288,38 @@ public class Server extends JFrame {
         	}
         			
     	}
-    	
-    	//String[] columnas = {"Rank","Ip del Cliente"," # de Cliente ", " Procesador ", " # de Núcleos "," F. Promedio "," Ram Disponible "," Ram Total "};
     }
+    
+    static String msgBuilder() {
+		String fnlStr = "";
+		
+		String separador = "_";
+		StringBuilder stringBuilder = new StringBuilder();
+
+		for (int i = 0; i < datos.length; i++) {
+		    for (int j = 0; j < datos[i].length; j++) {
+		        stringBuilder.append(datos[i][j]);
+		        if (j < datos[i].length - 1) {
+		            stringBuilder.append(separador);
+		        }
+		    }
+		    if (i < datos.length - 1) {
+		        stringBuilder.append(System.lineSeparator());
+		    }
+		}
+
+		fnlStr = stringBuilder.toString();
+		
+		
+		  
+		DevicesQueue.add(fnlStr);
+		return fnlStr;
+	}
     
     static void startValues() { 
     	CSVRead csv = new CSVRead();
         
-        ArrayList<String[]> DATA = csv.getValues();
-        String[] datoss = DATA.get(0); 
+        ArrayList<String[]> DATA = csv.getValues(); 
         //Leemos los datos almacenados en el txt
         
         for(int w=0;w<DATA.size();w++) {
@@ -312,9 +334,9 @@ public class Server extends JFrame {
         	}
         	
     		//Necesitamos Castear el tipo correcto 
-    		Object[] nuevoObjeto = {"NA", array[0], nCliente, 
-    				array[1],array[2],array[3],array[4],
-    				array[5],array[6],array[7],"Desconectado"}; 
+    		Object[] nuevoObjeto = {"NA", array[1], nCliente, 
+    				array[2],array[3],array[4],array[5],
+    				array[6],array[7],array[8],"Desconectado"}; 
     		
     		for (int i = 0; i < datos.length; i++) {
         	    for (int j = 0; j < datos[i].length; j++) {
