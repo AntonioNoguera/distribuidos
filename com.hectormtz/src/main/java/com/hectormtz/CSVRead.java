@@ -33,7 +33,8 @@ public class CSVRead {
 			while(lector.hasNextLine()) {
 				String linea = lector.nextLine();
 				String[] lineaEncontrada = linea.split("_"); 
-				res.add(lineaEncontrada[0]);
+				lineaEncontrada[1]=lineaEncontrada[1].replace("/","");
+				res.add(lineaEncontrada[1]);
 			}
 			
 			lector.close();
@@ -44,6 +45,22 @@ public class CSVRead {
         
 		return res;
     }
+	
+	public void updateNetFile(String newValue) {
+		
+		try {
+            // Lee el contenido del archivo existente
+            StringBuilder contenido = new StringBuilder(newValue);  
+            
+            // Escribe el contenido actualizado en el archivo
+            BufferedWriter escritor = new BufferedWriter(new FileWriter(archivo));
+            escritor.write(newValue.toString());
+            escritor.close();
+             
+        } catch (IOException e) {
+            	System.out.println("Ocurrió un error al insertar la nueva línea en el archivo: " + e.getMessage());
+        	}
+	}
 	
 	public ArrayList<String[]> getValues(){
 		ArrayList<String[]> objects = new ArrayList<String[]>();
@@ -65,7 +82,9 @@ public class CSVRead {
 		
 		return objects;
 	}
-
+	
+	
+	//Funcion que actualiza unicamente el nuevo miembro a todos los txt
 	public void newNetMember(String newMember) { 
 		 
 		try {
@@ -90,7 +109,7 @@ public class CSVRead {
             escritor.close();
              
         } catch (IOException e) {
-            System.out.println("Ocurrió un error al insertar la nueva línea en el archivo: " + e.getMessage());
-        }
+            	System.out.println("Ocurrió un error al insertar la nueva línea en el archivo: " + e.getMessage());
+        	}
+		}
 	}
-}
