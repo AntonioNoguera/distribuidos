@@ -23,6 +23,9 @@ import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
 
 import javax.swing.table.DefaultTableCellRenderer;
+
+import java.util.ArrayList;
+
 import javax.swing.table.DefaultTableModel;
 
 
@@ -32,8 +35,11 @@ public class Server extends JFrame {
     
 	private JTable tabla;
     private DefaultTableModel modelo;
+    
+    static String ServerIp = "";
 
     public Server() {
+    	
     	setTitle("Rankeo de Unidades - E2023 - Sistemas Distribuidos - Server Screen");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 100);
@@ -73,9 +79,15 @@ public class Server extends JFrame {
         timer.start(); 
     }
     
-    static int nCliente=0;
+    static int nCliente = 0;
+    
+    static String newMember = "";
     
     static Object[][] datos = new Object[1][11];
+    
+    static ArrayList<String> DevicesQueue = new ArrayList<String>();
+    
+    static ArrayList<String> servedDevices = new ArrayList<String>();
     
     /*
     private static void detectBetterDevice() {
@@ -156,8 +168,7 @@ public class Server extends JFrame {
     	}else if(propiedades[0].equals("GenuineIntel")) {
     		String[] cadena = propiedades[1].split("-"); 
     		
-    		Gen = (int)cadena[0].charAt(cadena[0].length()-1)- '0';; 
-    		System.out.println("GEN: "+Gen);
+    		Gen = (int)cadena[0].charAt(cadena[0].length()-1)- '0';
     		
     	} 
     	double MemDisp = Double.parseDouble(propiedades[5]) ;
@@ -171,14 +182,11 @@ public class Server extends JFrame {
 		return rank;
     	
     }
-    
-    private void actualizarTabla() {
-    	
-        // Creamos los datos para la tabla
-    	
-        // Eliminamos todos los datos anteriores del modelo
-        modelo.setRowCount(0);
-        
+     
+    private void actualizarTabla() { 
+        modelo.setRowCount(0); 
+        System.out.println("IP DEL SERVIDOR "+ ServerIp);
+
         // Agregamos los nuevos datos al modelo
         for (Object[] fila : datos) {
             modelo.addRow(fila);
@@ -188,10 +196,26 @@ public class Server extends JFrame {
     static void arrancaEstres() {
     	System.out.println("-------- SE ARRANCA PRUEBAS DE ESTRES --------");
     }
+   
+    static ArrayList<String> activeDevices(){
+    	ArrayList<String> onlineDevices = new ArrayList<String>();
+    	
+    	for(int i=0;i<datos.length;i++) {
+    		if(!(datos[i][10].equals("Desconectado"))) {
+    			onlineDevices.add(datos[i][1].toString());
+    		}
+    		
+    	}
+    	
+    	System.out.println("Active Devices: "+ onlineDevices);
+    	
+    	return onlineDevices;
+    }
+    
     
     static void actualizarObjeto(String Buffer,InetAddress ip) {
-    	String propiedades[] = Buffer.split("/");  
-    	System.out.println("BANDERA DE ARRANQUE: "+propiedades[7]);
+    	String propiedades[] = Buffer.split("_");   
+    	
     	if(propiedades[7].equals("true")) {
     		arrancaEstres();
     	}
@@ -208,7 +232,17 @@ public class Server extends JFrame {
     	
     	// Cliente Nuevo
     	if(flagIp == -1) {
-			nCliente++; 
+			nCliente++;
+			//Codigo del nuevo miembro
+			/*
+			CSVRead csv = new CSVRead();
+			String netMember = ip.toString()+"_"+Buffer;
+			csv.newNetMember(netMember);
+			*/
+			
+			//newMember = ip.toString()+"_"+Buffer;
+			DevicesQueue.add(ip.toString()+"_"+Buffer);
+			
 			Object[][] nuevoArreglo;
 			if(nCliente==1) {
 				nuevoArreglo = new Object[datos.length][datos[0].length];
@@ -227,27 +261,79 @@ public class Server extends JFrame {
         	}
         	nuevoArreglo[nCliente - 1] = nuevoObjeto;
         	datos = nuevoArreglo;
+        	
+        	activeDevices();
     	}else {
     		// Existe el cliente
     		//
     		//Actualizar los elementos RanK-0 Frec Prom-6  FrecMax-7 - RamDIs Ram-8 - Ciente10 
     		
     		datos[flagIp][0] = rankGenerator(propiedades);
+    		
+    		datos[flagIp][3] = propiedades[0];
+    		datos[flagIp][4] = propiedades[1]; 
+    		datos[flagIp][5] = propiedades[2];
+    		
+    		datos[flagIp][9] = propiedades[6];
+    		
+    		//Idealmente estos son los que se mantienen
         	datos[flagIp][6] = propiedades[3];
         	datos[flagIp][7] = propiedades[4];  
         	datos[flagIp][8] = propiedades[5];
         	
         	//Funcion que determina si es servidor o no
-			datos[flagIp][10] ="Nada"; 
+        	if(datos[flagIp][1].equals("/"+ServerIp)) {
+        		datos[flagIp][10] ="Servidor"; 
+        	}else {
+        		datos[flagIp][10] ="Cliente"; 
+        	}
+        			
     	}
     	
     	//String[] columnas = {"Rank","Ip del Cliente"," # de Cliente ", " Procesador ", " # de Núcleos "," F. Promedio "," Ram Disponible "," Ram Total "};
-
-    	 
     }
     
-    public static void start()  throws Exception{
+    static void startValues() { 
+    	CSVRead csv = new CSVRead();
+        
+        ArrayList<String[]> DATA = csv.getValues();
+        String[] datoss = DATA.get(0); 
+        //Leemos los datos almacenados en el txt
+        
+        for(int w=0;w<DATA.size();w++) {
+        	nCliente++;
+        	String[] array = DATA.get(w);
+        	//Añadimos al objeto de datos
+        	Object[][] nuevoArreglo;
+        	if(nCliente==1) {
+        		nuevoArreglo = new Object[datos.length][datos[0].length]; 
+        	}else {
+        		nuevoArreglo = new Object[datos.length+1][datos[0].length]; 
+        	}
+        	
+    		//Necesitamos Castear el tipo correcto 
+    		Object[] nuevoObjeto = {"NA", array[0], nCliente, 
+    				array[1],array[2],array[3],array[4],
+    				array[5],array[6],array[7],"Desconectado"}; 
+    		
+    		for (int i = 0; i < datos.length; i++) {
+        	    for (int j = 0; j < datos[i].length; j++) {
+        	        nuevoArreglo[i][j] = datos[i][j];
+        	    }
+        	}
+        	nuevoArreglo[nCliente-1] = nuevoObjeto;
+        	datos = nuevoArreglo;	
+        	
+        } 
+    }
+    
+    public static void start(String ip)  throws Exception{
         //Se arranca la tabla
+    	
+    	ServerIp = ip;
+    	 
+    	startValues();
+    	
     	SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -262,40 +348,66 @@ public class Server extends JFrame {
         Socket s = null;
         ServerSocket ss = new ServerSocket(5432);
 
-        while( eternity ){
-
-
+        while( eternity ){ 
+        	
             try {
 
                 // el ServerSocket me da el Socket
                 s = ss.accept();
                 // informacion en la consola
-				System.out.println("------Server");
-				System.out.println("Esperando Mensaje ");
+				System.out.println("------Server"); 
 				System.out.println();
-                System.out.println("Se ingresaron datos desde la IP: " +s.getInetAddress());
-                InetAddress ipRecibida = s.getInetAddress();
+				
+				InetAddress ipRecibida = s.getInetAddress();
+				
+                System.out.println("Se ingresaron datos desde la IP: " +ipRecibida);
                 
-
+                
+                
                 // enmascaro la entrada y salida de bytes
                 ois = new ObjectInputStream( s.getInputStream() );
+                
                 oos = new ObjectOutputStream( s.getOutputStream() );
                 
                 //Se recibe la cadena objeto
+                
                 String paquete = (String) ois.readObject(); 
                 
                 //Actualizacion del objeto
                 actualizarObjeto(paquete,ipRecibida);
 
                 // envio el saludo al cliente
-                oos.writeObject("Conexion Establecida");
-//                System.out.println("Recepcion Declarada");
+                //Acá es donde se va a enviar la nueva cadena
+                
+                String serverOutPut = "";
+                
+                if(DevicesQueue.size()>0) { 
+                	ArrayList<String> devices = activeDevices();
+                	
+                	String ipR = ipRecibida.toString();
+                	
+                	if(devices.contains(ipR) && !(servedDevices.contains(ipR))) {
+                		//se manda la instrucción 
+                		//DevicesQueue.getIndex(0)
+                		serverOutPut = DevicesQueue.get(0);
+                		
+                		//se agrega a dispositivos atendidos
+                		servedDevices.add(ipRecibida.toString());
+                	}
+                	
+                	if(devices.size() == servedDevices.size()) {
+                		servedDevices.clear();
+                		DevicesQueue.remove(0);
+                	}
+                	 
+                } 
+                
+                oos.writeObject(serverOutPut);
+                
 
             }catch(Exception ex){
-            	// Disables error
-
-//                ex.printStackTrace();
-
+            	// Disables error 
+            	
             }finally{
 
                 if( oos !=null ) oos.close(); 
