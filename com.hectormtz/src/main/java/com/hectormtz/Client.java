@@ -66,6 +66,8 @@ public class Client extends Thread {
 		return info;
 	}
 	
+	static double maxCPUFrec = 0;
+	
 	public static String[] getDynamicInfo() {
 		SystemInfo si = new SystemInfo();
         HardwareAbstractionLayer hal = si.getHardware(); 
@@ -83,6 +85,10 @@ public class Client extends Thread {
         double maxFreq = processor.getMaxFreq();
         double maxFrequency = maxFreq/(double)1000000000;
         
+        if(maxFrequency>maxCPUFrec) {
+        	maxCPUFrec = maxFrequency;
+        }
+        
         double promFreq=0;
         
         
@@ -93,12 +99,11 @@ public class Client extends Thread {
         }
         
         
-        double f_ghz = promFreq/1000000000;
-        System.out.println("Frecuencia promedio: "+f_ghz);
+        double f_ghz = promFreq/1000000000; 
         
 		String info[] = { 
 			String.valueOf(f_ghz),
-			String.valueOf(maxFrequency),
+			String.valueOf(maxCPUFrec),
 			String.valueOf(availableMemory),
 		};
 	
@@ -106,6 +111,7 @@ public class Client extends Thread {
 	}
 	
 	public static String[] joinInfo(String[] dInfo, String sInfo[]){
+		
 		String[] joinedInfo =  {sInfo[0], sInfo[1], sInfo[2],dInfo[0], 
 								dInfo[1], dInfo[2], sInfo[3], stressFlag};
 		
@@ -126,7 +132,7 @@ public class Client extends Thread {
     	System.out.println("---------Client Side");
     	String[] info = joinInfo(dInfo,sInfo);
     	
-        System.out.println(String.join("/", info)); 
+        System.out.println(String.join("_", info)); 
 
 		ObjectInputStream ois = null;
 		ObjectOutputStream oos = null;
@@ -140,14 +146,21 @@ public class Client extends Thread {
 			
 			long from = System.currentTimeMillis();
 			// send info 
-			oos.writeObject(String.join("/", info));
+			oos.writeObject(String.join("_", info));
 			
-			// receive average
-			String res = (String)ois.readObject();
-			long to = System.currentTimeMillis();
 			
-//			System.out.println(res);
-//			System.out.println("Time spend: " + (to - from) + " ms.");
+			String ret = (String)ois.readObject();
+			
+			if(ret.length()!=0) {
+				if(ret.charAt(0)=='/') {
+					CSVRead csv = new CSVRead(); 
+					csv.newNetMember(ret);
+				}
+			}
+			
+			System.out.println("Mensaje Recibido: "+ ret);
+			 
+			
 		} catch (Exception e) {
 			System.err.println("Conexión Desde Cliente Fallida, intenta de nuevo...");
 			//e.printStackTrace();
