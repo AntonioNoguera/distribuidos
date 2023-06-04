@@ -1,6 +1,7 @@
 package com.hectormtz;
 
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -38,14 +39,14 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 		CSVRead csv = new CSVRead();
-		String[] pcs = csv.read();
+		ArrayList<String> pcs = csv.read();
 		int datos = csv.getLength();
 		
 		//Nuevo Metodo BroadCast 
 		for (int i = 0; i < datos; i++) {
-			boolean isActive = verificarServidorActivo(pcs[i], 5432);
+			boolean isActive = verificarServidorActivo(pcs.get(i), 5432);
 			if (isActive) {
-				ipAddress = pcs[i];
+				ipAddress = pcs.get(i);
 				break;
 			}
 		} 
@@ -53,14 +54,13 @@ public class Main {
 		if (ipAddress.equals("")) {
 			try {
 	            InetAddress localhost = InetAddress.getLocalHost();
-	            ipAddress = localhost.getHostAddress(); 
-	            System.out.println("IP DISPOSITIVO: "+ipAddress);
+	            ipAddress = localhost.getHostAddress();  
 	        } catch (UnknownHostException e) {
 	            e.printStackTrace();
 	        }
 			Client client = new Client(ipAddress);
 			client.start();
-			Server.start();
+			Server.start(ipAddress.toString());
 		} else {
 			Client client = new Client(ipAddress);
 			client.start();
